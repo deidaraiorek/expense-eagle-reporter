@@ -16,6 +16,7 @@ import ApproveReceipts from "./pages/ApproveReceipts";
 import Reports from "./pages/Reports";
 import DepartmentMembers from "./pages/DepartmentMembers";
 import UserManagement from "./pages/UserManagement";
+import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => {
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/department-members" element={<DepartmentMembers />} />
                   <Route path="/user-management" element={<UserManagement />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
             </div>
