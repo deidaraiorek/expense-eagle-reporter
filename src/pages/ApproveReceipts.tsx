@@ -30,10 +30,25 @@ import {
 import { Check, X, AlertTriangle, Flag, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
+type Receipt = {
+  id: string;
+  userId: string;
+  date: string;
+  store: string;
+  total: number;
+  category: string;
+  subcategory: string;
+  items: Array<{ name: string; price: number; quantity: number; }>;
+  status: "pending" | "approved" | "rejected";
+  image: string;
+  flagged?: boolean;
+  notes?: string;
+};
+
 const ApproveReceipts = () => {
   const { toast } = useToast();
-  const [receipts, setReceipts] = useState(mockReceipts);
-  const [selectedReceipt, setSelectedReceipt] = useState<typeof mockReceipts[0] | null>(null);
+  const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts as Receipt[]);
+  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending");
@@ -48,7 +63,7 @@ const ApproveReceipts = () => {
     ? receipts 
     : receipts.filter(r => r.status === statusFilter);
 
-  const handleViewReceipt = (receipt: typeof mockReceipts[0]) => {
+  const handleViewReceipt = (receipt: Receipt) => {
     setSelectedReceipt(receipt);
     setShowReceiptDialog(true);
     setFeedback("");
@@ -60,7 +75,7 @@ const ApproveReceipts = () => {
     // Update receipt status (this would be an API call in a real app)
     const updatedReceipts = receipts.map(receipt => 
       receipt.id === selectedReceipt.id 
-        ? { ...receipt, status: "approved" } 
+        ? { ...receipt, status: "approved" as const } 
         : receipt
     );
     
@@ -86,7 +101,7 @@ const ApproveReceipts = () => {
     // Update receipt status (this would be an API call in a real app)
     const updatedReceipts = receipts.map(receipt => 
       receipt.id === selectedReceipt.id 
-        ? { ...receipt, status: "rejected", notes: feedback } 
+        ? { ...receipt, status: "rejected" as const, notes: feedback } 
         : receipt
     );
     
@@ -181,7 +196,7 @@ const ApproveReceipts = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge variant={
-                          receipt.status === "approved" ? "success" : 
+                          receipt.status === "approved" ? "default" : 
                           receipt.status === "rejected" ? "destructive" : 
                           "outline"
                         }>
@@ -243,7 +258,7 @@ const ApproveReceipts = () => {
                   <h3 className="text-lg font-semibold flex items-center justify-between">
                     {selectedReceipt.store}
                     <Badge variant={
-                      selectedReceipt.status === "approved" ? "success" : 
+                      selectedReceipt.status === "approved" ? "default" : 
                       selectedReceipt.status === "rejected" ? "destructive" : 
                       "outline"
                     }>

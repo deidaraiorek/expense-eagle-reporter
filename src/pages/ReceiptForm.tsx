@@ -9,9 +9,7 @@ import { Card } from "@/components/ui/card";
 import { 
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -20,6 +18,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { categories } from "../utils/mockData";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "../context/AuthContext";
+
+interface ItemForm {
+  name: string;
+  price: string;
+  quantity: number;
+}
 
 const ReceiptForm = () => {
   const { user } = useAuth();
@@ -33,7 +37,7 @@ const ReceiptForm = () => {
     store: "",
     category: "",
     subcategory: "",
-    items: [{ name: "", price: "", quantity: 1 }],
+    items: [{ name: "", price: "", quantity: 1 }] as ItemForm[],
     notes: "",
   });
 
@@ -117,25 +121,6 @@ const ReceiptForm = () => {
       setIsSubmitting(false);
       return;
     }
-
-    // Create new receipt (mock implementation)
-    const newReceipt = {
-      id: uuidv4(),
-      userId: user?.id || "",
-      date: formData.date,
-      store: formData.store,
-      total: total,
-      category: formData.category,
-      subcategory: formData.subcategory,
-      items: formData.items.map(item => ({
-        name: item.name,
-        price: parseFloat(item.price as string) || 0,
-        quantity: item.quantity
-      })),
-      status: "pending",
-      image: imagePreview,
-      notes: formData.notes
-    };
 
     // In a real app, this would be an API call
     setTimeout(() => {
