@@ -37,7 +37,7 @@ import {
   MoreHorizontal,
   RefreshCw
 } from "lucide-react";
-import { receipts, users } from "../utils/mockData";
+import { getReceipts, users, generateReceiptCSV, downloadCSV } from "../utils/mockData";
 import { useToast } from "@/components/ui/use-toast";
 import { format, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -54,16 +54,20 @@ const Reports = () => {
   const [groupBy, setGroupBy] = useState<string>("category");
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
+  const [filteredReceipts, setFilteredReceipts] = useState(getReceipts());
   
   // Filter receipts based on the selected criteria
-  const filteredReceipts = receipts.filter(receipt => {
-    const receiptDate = new Date(receipt.date);
-    const dateInRange = receiptDate >= dateRange.from && receiptDate <= dateRange.to;
-    const employeeMatches = employee === "all" || receipt.userId === employee;
-    const categoryMatches = category === "all" || receipt.category === category;
-    
-    return dateInRange && employeeMatches && categoryMatches;
-  });
+  const filterReceipts = () => {
+    const receipts = getReceipts();
+    return receipts.filter(receipt => {
+      const receiptDate = new Date(receipt.date);
+      const dateInRange = receiptDate >= dateRange.from && receiptDate <= dateRange.to;
+      const employeeMatches = employee === "all" || receipt.userId === employee;
+      const categoryMatches = category === "all" || receipt.category === category;
+      
+      return dateInRange && employeeMatches && categoryMatches;
+    });
+  };
   
   // Calculate totals
   const totalAmount = filteredReceipts.reduce((sum, receipt) => sum + receipt.total, 0);
@@ -117,6 +121,10 @@ const Reports = () => {
   const handleGenerateReport = () => {
     setIsGenerating(true);
     
+    // Get the latest data and apply filters
+    const filtered = filterReceipts();
+    setFilteredReceipts(filtered);
+    
     // Simulate API call
     setTimeout(() => {
       setIsGenerating(false);
@@ -130,10 +138,15 @@ const Reports = () => {
   };
   
   const handleExportReport = (format: string) => {
-    toast({
-      title: `Exporting as ${format.toUpperCase()}`,
-      description: "Your report will be downloaded shortly.",
-    });
+    if (format === 'csv') {
+      const csvData = generateReceiptCSV(filteredReceipts);
+      downloadCSV(csvData, `expense-report-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    } else {
+      toast({
+        title: `Exporting as ${format.toUpperCase()}`,
+        description: "Your report will be downloaded shortly.",
+      });
+    }
   };
 
   const chartData = generateChartData();
@@ -349,7 +362,7 @@ const Reports = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {Array.from(new Set(receipts.map(r => r.category))).map(cat => (
+                  {Array.from(new Set(getReceipts().map(r => r.category))).map(cat => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
                     </SelectItem>

@@ -1,6 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
-import { User, Receipt, Department } from '../types';
 
+import { v4 as uuidv4 } from 'uuid';
+
+// Define our types locally to avoid circular imports
 export type User = {
   id: string;
   firstName: string;
@@ -82,39 +83,6 @@ export const categories = {
   Entertainment: ['Client', 'Team', 'Other'],
   Transportation: ['Taxi', 'Parking', 'Gas', 'Other'],
 };
-
-// Mock Receipts
-export const receipts: Receipt[] = [
-  {
-    id: '1',
-    userId: '2',
-    date: '2024-04-15',
-    store: 'Office Depot',
-    total: 156.78,
-    category: 'Office',
-    subcategory: 'Supplies',
-    items: [
-      { name: 'Printer Paper', price: 45.99, quantity: 2 },
-      { name: 'Ink Cartridge', price: 64.80, quantity: 1 },
-    ],
-    status: 'pending',
-    image: 'https://placehold.co/600x400',
-  },
-  {
-    id: '2',
-    userId: '2',
-    date: '2024-04-14',
-    store: 'Delta Airlines',
-    total: 450.00,
-    category: 'Travel',
-    subcategory: 'Airfare',
-    items: [
-      { name: 'Flight Ticket', price: 450.00, quantity: 1 },
-    ],
-    status: 'approved',
-    image: 'https://placehold.co/600x400',
-  },
-];
 
 // State management for mock data (this simulates a database)
 let receiptStore: Receipt[] = [
@@ -235,13 +203,16 @@ export const mockLogin = (email: string, password: string) => {
   throw new Error('Invalid credentials');
 };
 
-export const mockRegister = (userData: Partial<User>) => {
-  const newUser = {
+export const mockRegister = (userData: { firstName: string; lastName: string; email: string; role: 'employee' | 'supervisor'; department: string }) => {
+  const newUser: User = {
     id: uuidv4(),
-    ...userData,
-    role: 'employee' as const,
-    department: 'Engineering',
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    role: userData.role,
+    department: userData.department,
   };
-  users.push(newUser as User);
+  users.push(newUser);
   return { user: newUser, token: 'mock-jwt-token' };
 };
+

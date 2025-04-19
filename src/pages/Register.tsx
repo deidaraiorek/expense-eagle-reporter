@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { User } from "../types";
 
 const Register = () => {
   const { login } = useAuth();
@@ -42,12 +42,12 @@ const Register = () => {
     }
 
     try {
-      // Use mock register instead of API call
+      // Use mock register
       const userData = mockRegister({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        role: "employee" as const,
+        role: "employee",
         department: "Engineering",
       });
       

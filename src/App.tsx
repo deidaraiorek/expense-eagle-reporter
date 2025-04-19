@@ -1,7 +1,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,8 +18,76 @@ import DepartmentMembers from "./pages/DepartmentMembers";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
+import Index from "./pages/Index";
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+  
+  return <>{children}</>;
+};
 
 const queryClient = new QueryClient();
+
+const AppRoutes = () => {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/receipts" element={
+        <ProtectedRoute>
+          <ReviewReceipts />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/receipts/new" element={
+        <ProtectedRoute>
+          <ReceiptForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/approve-receipts" element={
+        <ProtectedRoute>
+          <ApproveReceipts />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/reports" element={
+        <ProtectedRoute>
+          <Reports />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/department-members" element={
+        <ProtectedRoute>
+          <DepartmentMembers />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/user-management" element={
+        <ProtectedRoute>
+          <UserManagement />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 const App = () => {
   return (
@@ -32,19 +100,7 @@ const App = () => {
             <div className="min-h-screen bg-gray-50">
               <Header />
               <main className="container mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/receipts" element={<ReviewReceipts />} />
-                  <Route path="/receipts/new" element={<ReceiptForm />} />
-                  <Route path="/approve-receipts" element={<ApproveReceipts />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/department-members" element={<DepartmentMembers />} />
-                  <Route path="/user-management" element={<UserManagement />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AppRoutes />
               </main>
             </div>
           </BrowserRouter>

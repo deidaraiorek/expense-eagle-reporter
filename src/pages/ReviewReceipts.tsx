@@ -1,7 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { receipts as mockReceipts } from "../utils/mockData";
+import { getReceipts } from "../utils/mockData";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -27,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Eye, Filter, Download } from "lucide-react";
+import { Search, Eye, Filter, Download, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const ReviewReceipts = () => {
   const { user } = useAuth();
@@ -36,9 +37,17 @@ const ReviewReceipts = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [receipts, setReceipts] = useState<any[]>([]);
+  
+  // Fetch receipts when component mounts or when a receipt might have been updated
+  useEffect(() => {
+    // Get all receipts from mock data
+    const allReceipts = getReceipts();
+    setReceipts(allReceipts);
+  }, []);
   
   // Get user's receipts
-  const userReceipts = mockReceipts.filter(receipt => 
+  const userReceipts = receipts.filter(receipt => 
     receipt.userId === user?.id
   );
   
@@ -65,6 +74,12 @@ const ReviewReceipts = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">My Receipts</h1>
+        <Button asChild>
+          <Link to="/receipts/new" className="flex items-center gap-2">
+            <PlusCircle className="h-4 w-4" />
+            Add Receipt
+          </Link>
+        </Button>
       </div>
       
       <div className="flex flex-col md:flex-row gap-4">
@@ -152,7 +167,7 @@ const ReviewReceipts = () => {
                       </p>
                       {!searchTerm && statusFilter === "all" && (
                         <Button variant="outline" asChild>
-                          <a href="/receipts/new">Submit New Receipt</a>
+                          <Link to="/receipts/new">Submit New Receipt</Link>
                         </Button>
                       )}
                     </div>

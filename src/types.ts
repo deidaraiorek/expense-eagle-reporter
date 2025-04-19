@@ -1,4 +1,5 @@
 
+// These types should match the ones in src/utils/mockData.ts
 export interface User {
   id: string;
   firstName: string;
