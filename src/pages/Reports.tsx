@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -34,11 +35,12 @@ import {
   Filter, 
   CalendarIcon, 
   MoreHorizontal,
-  RefreshCw
+  RefreshCw,
+  FilePdf
 } from "lucide-react";
 import { getReceipts, users, generateReceiptCSV, downloadCSV } from "../utils/mockData";
 import { useToast } from "@/components/ui/use-toast";
-import { format as formatDate, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { formatDate, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -113,9 +115,11 @@ const Reports = () => {
     return [];
   };
   
+  // Updated to properly fetch and filter receipts
   const handleGenerateReport = () => {
     setIsGenerating(true);
     
+    // Get fresh data and apply filters
     const filtered = filterReceipts();
     setFilteredReceipts(filtered);
     
@@ -125,20 +129,120 @@ const Reports = () => {
       
       toast({
         title: "Report Generated",
-        description: "Your expense report has been generated successfully.",
+        description: `Generated report with ${filtered.length} receipts for the selected period.`,
       });
-    }, 1000);
+    }, 800);
   };
   
+  // Enhanced export functionality
   const handleExportReport = (format: string) => {
+    // Make sure we have the latest data before exporting
+    const currentReceipts = filteredReceipts.length > 0 ? filteredReceipts : filterReceipts();
+    
     if (format === 'csv') {
-      const csvData = generateReceiptCSV(filteredReceipts);
+      const csvData = generateReceiptCSV(currentReceipts);
       const fileName = `expense-report-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`;
       downloadCSV(csvData, fileName);
-    } else {
+      
       toast({
-        title: `Exporting as ${format.toUpperCase()}`,
-        description: "Your report will be downloaded shortly.",
+        title: "CSV Export Successful",
+        description: "Your CSV report has been downloaded.",
+      });
+    } else if (format === 'pdf') {
+      // Create a printable version of the report
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: "Export Failed",
+          description: "Please allow popups to download the PDF report.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Generate content for the printable page
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Expense Report - ${formatDate(new Date(), 'yyyy-MM-dd')}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h1 { color: #333; text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+              th { background-color: #f2f2f2; }
+              .summary { margin-bottom: 20px; }
+              .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+              @media print {
+                .no-print { display: none; }
+                button { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Expense Report</h1>
+            <div class="summary">
+              <p><strong>Date Range:</strong> ${formatDate(dateRange.from, 'LLL dd, y')} - ${formatDate(dateRange.to, 'LLL dd, y')}</p>
+              <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
+              <p><strong>Total Receipts:</strong> ${currentReceipts.length}</p>
+              <p><strong>Approved Amount:</strong> $${approvedAmount.toFixed(2)}</p>
+              <p><strong>Pending Amount:</strong> $${pendingAmount.toFixed(2)}</p>
+            </div>
+            
+            <h2>Expense Details</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Employee</th>
+                  <th>Store</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${currentReceipts.map(receipt => {
+                  const employee = users.find(u => u.id === receipt.userId);
+                  return `<tr>
+                    <td>${new Date(receipt.date).toLocaleDateString()}</td>
+                    <td>${employee ? `${employee.firstName} ${employee.lastName}` : 'Unknown'}</td>
+                    <td>${receipt.store}</td>
+                    <td>${receipt.category}</td>
+                    <td>${receipt.status}</td>
+                    <td>$${receipt.total.toFixed(2)}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+            
+            <div class="footer">
+              <p>Generated on ${new Date().toLocaleString()}</p>
+            </div>
+            
+            <div class="no-print" style="text-align: center; margin-top: 20px;">
+              <button onclick="window.print();return false;" style="padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Print PDF
+              </button>
+              <button onclick="window.close();return false;" style="padding: 10px 20px; background: #6B7280; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                Close
+              </button>
+            </div>
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      
+      toast({
+        title: "PDF Export Ready",
+        description: "Your PDF report has been prepared and is ready to print or save.",
+      });
+    } else if (format === 'excel') {
+      // Show a message that Excel export is not yet implemented
+      toast({
+        title: "Excel Export",
+        description: "Excel export functionality will be available in a future update.",
       });
     }
   };
@@ -187,12 +291,15 @@ const Reports = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleExportReport("pdf")}>
+                <FilePdf className="h-4 w-4 mr-2" />
                 Export as PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExportReport("csv")}>
+                <Download className="h-4 w-4 mr-2" />
                 Export as CSV
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExportReport("excel")}>
+                <Download className="h-4 w-4 mr-2" />
                 Export as Excel
               </DropdownMenuItem>
             </DropdownMenuContent>
