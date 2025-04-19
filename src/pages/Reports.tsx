@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table, 
@@ -40,14 +40,15 @@ import {
 } from "lucide-react";
 import { getReceipts, users, generateReceiptCSV, downloadCSV } from "../utils/mockData";
 import { useToast } from "@/components/ui/use-toast";
-import { formatDate, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { formatDate, startOfMonth, endOfMonth, subDays, parseISO } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Reports = () => {
   const { toast } = useToast();
+  // Initialize with date range that includes 2024 receipts
   const [dateRange, setDateRange] = useState<{ from: Date, to: Date }>({
-    from: subDays(new Date(), 30),
+    from: new Date(2024, 0, 1), // January 1, 2024
     to: new Date()
   });
   const [employee, setEmployee] = useState<string>("all");
@@ -68,6 +69,7 @@ const Reports = () => {
     console.log("Total receipts before filtering:", receipts.length);
     
     const filtered = receipts.filter(receipt => {
+      // Parse the receipt date correctly
       const receiptDate = new Date(receipt.date);
       
       // Date range check
@@ -82,6 +84,9 @@ const Reports = () => {
       // Log individual receipt filtering for debugging
       console.log(`Receipt ${receipt.id}:`, { 
         date: receipt.date, 
+        receiptDateObj: receiptDate.toISOString(),
+        fromDate: dateRange.from.toISOString(),
+        toDate: dateRange.to.toISOString(),
         dateInRange,
         userId: receipt.userId, 
         employeeMatches,
@@ -292,10 +297,21 @@ const Reports = () => {
           to: today
         });
         break;
+      case "year2024":
+        setDateRange({
+          from: new Date(2024, 0, 1), // January 1, 2024
+          to: new Date(2024, 11, 31) // December 31, 2024
+        });
+        break;
       default:
         break;
     }
   };
+
+  // Load initial data when component mounts
+  useEffect(() => {
+    handleGenerateReport();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -415,7 +431,7 @@ const Reports = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <div className="p-3 border-b">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -436,6 +452,13 @@ const Reports = () => {
                         onClick={() => handleDatePreset("last90")}
                       >
                         Last 90 Days
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDatePreset("year2024")}
+                      >
+                        Year 2024
                       </Button>
                     </div>
                   </div>
