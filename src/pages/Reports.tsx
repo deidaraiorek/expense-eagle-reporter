@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -39,7 +38,7 @@ import {
 } from "lucide-react";
 import { getReceipts, users, generateReceiptCSV, downloadCSV } from "../utils/mockData";
 import { useToast } from "@/components/ui/use-toast";
-import { format, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { format as formatDate, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -56,7 +55,6 @@ const Reports = () => {
   const [reportGenerated, setReportGenerated] = useState(false);
   const [filteredReceipts, setFilteredReceipts] = useState(getReceipts());
   
-  // Filter receipts based on the selected criteria
   const filterReceipts = () => {
     const receipts = getReceipts();
     return receipts.filter(receipt => {
@@ -69,7 +67,6 @@ const Reports = () => {
     });
   };
   
-  // Calculate totals
   const totalAmount = filteredReceipts.reduce((sum, receipt) => sum + receipt.total, 0);
   const totalReceipts = filteredReceipts.length;
   const approvedAmount = filteredReceipts
@@ -79,7 +76,6 @@ const Reports = () => {
     .filter(r => r.status === "pending")
     .reduce((sum, receipt) => sum + receipt.total, 0);
   
-  // Generate chart data based on groupBy selection
   const generateChartData = () => {
     if (groupBy === "category") {
       const categoryData: Record<string, number> = {};
@@ -114,18 +110,15 @@ const Reports = () => {
       }));
     }
     
-    // Default to category
     return [];
   };
   
   const handleGenerateReport = () => {
     setIsGenerating(true);
     
-    // Get the latest data and apply filters
     const filtered = filterReceipts();
     setFilteredReceipts(filtered);
     
-    // Simulate API call
     setTimeout(() => {
       setIsGenerating(false);
       setReportGenerated(true);
@@ -140,7 +133,8 @@ const Reports = () => {
   const handleExportReport = (format: string) => {
     if (format === 'csv') {
       const csvData = generateReceiptCSV(filteredReceipts);
-      downloadCSV(csvData, `expense-report-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      const fileName = `expense-report-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`;
+      downloadCSV(csvData, fileName);
     } else {
       toast({
         title: `Exporting as ${format.toUpperCase()}`,
@@ -151,7 +145,6 @@ const Reports = () => {
 
   const chartData = generateChartData();
   
-  // Handle preset date ranges
   const handleDatePreset = (preset: string) => {
     const today = new Date();
     
@@ -281,11 +274,11 @@ const Reports = () => {
                     {dateRange.from ? (
                       dateRange.to ? (
                         <>
-                          {format(dateRange.from, "LLL dd, y")} -{" "}
-                          {format(dateRange.to, "LLL dd, y")}
+                          {formatDate(dateRange.from, "LLL dd, y")} -{" "}
+                          {formatDate(dateRange.to, "LLL dd, y")}
                         </>
                       ) : (
-                        format(dateRange.from, "LLL dd, y")
+                        formatDate(dateRange.from, "LLL dd, y")
                       )
                     ) : (
                       <span>Select date range</span>

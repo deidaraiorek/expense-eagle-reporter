@@ -1,8 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Clock, AlertTriangle, FileCheck, FileText } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { receipts } from "../utils/mockData";
+import { getReceipts } from "../utils/mockData";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
@@ -11,7 +10,7 @@ const Dashboard = () => {
   const isSupervisor = user?.role === "supervisor";
 
   // Filter receipts based on the current user
-  const userReceipts = receipts.filter(receipt => 
+  const userReceipts = getReceipts().filter(receipt => 
     isEmployee ? receipt.userId === user?.id : true
   );
   

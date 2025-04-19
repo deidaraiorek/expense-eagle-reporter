@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { receipts as mockReceipts } from "../utils/mockData";
+import { getReceipts, updateReceipt } from "../utils/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,25 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Check, X, AlertTriangle, Flag, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-
-type Receipt = {
-  id: string;
-  userId: string;
-  date: string;
-  store: string;
-  total: number;
-  category: string;
-  subcategory: string;
-  items: Array<{ name: string; price: number; quantity: number; }>;
-  status: "pending" | "approved" | "rejected";
-  image: string;
-  flagged?: boolean;
-  notes?: string;
-};
+import { Receipt } from "../types";
 
 const ApproveReceipts = () => {
   const { toast } = useToast();
-  const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts as Receipt[]);
+  const [receipts, setReceipts] = useState<Receipt[]>(getReceipts());
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [feedback, setFeedback] = useState("");
