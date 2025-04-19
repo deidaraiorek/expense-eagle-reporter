@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -57,17 +58,45 @@ const Reports = () => {
   const [filteredReceipts, setFilteredReceipts] = useState(getReceipts());
   
   const filterReceipts = () => {
+    console.log("Filtering receipts with:", {
+      dateRange,
+      employee,
+      category
+    });
+    
     const receipts = getReceipts();
-    return receipts.filter(receipt => {
+    console.log("Total receipts before filtering:", receipts.length);
+    
+    const filtered = receipts.filter(receipt => {
       const receiptDate = new Date(receipt.date);
+      
+      // Date range check
       const dateInRange = receiptDate >= dateRange.from && receiptDate <= dateRange.to;
+      
+      // Employee check
       const employeeMatches = employee === "all" || receipt.userId === employee;
+      
+      // Category check
       const categoryMatches = category === "all" || receipt.category === category;
+      
+      // Log individual receipt filtering for debugging
+      console.log(`Receipt ${receipt.id}:`, { 
+        date: receipt.date, 
+        dateInRange,
+        userId: receipt.userId, 
+        employeeMatches,
+        category: receipt.category, 
+        categoryMatches
+      });
       
       return dateInRange && employeeMatches && categoryMatches;
     });
+    
+    console.log("Filtered receipts:", filtered.length);
+    return filtered;
   };
   
+  // Calculate report totals based on filtered receipts
   const totalAmount = filteredReceipts.reduce((sum, receipt) => sum + receipt.total, 0);
   const totalReceipts = filteredReceipts.length;
   const approvedAmount = filteredReceipts
