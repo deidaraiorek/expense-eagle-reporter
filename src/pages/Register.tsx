@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -48,6 +47,8 @@ const Register = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        role: "employee" as const,
+        department: "Engineering",
       });
       
       login(userData);
