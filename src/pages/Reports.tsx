@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -36,7 +35,7 @@ import {
   CalendarIcon, 
   MoreHorizontal,
   RefreshCw,
-  FilePdf
+  FileText
 } from "lucide-react";
 import { getReceipts, users, generateReceiptCSV, downloadCSV } from "../utils/mockData";
 import { useToast } from "@/components/ui/use-toast";
@@ -115,11 +114,9 @@ const Reports = () => {
     return [];
   };
   
-  // Updated to properly fetch and filter receipts
   const handleGenerateReport = () => {
     setIsGenerating(true);
     
-    // Get fresh data and apply filters
     const filtered = filterReceipts();
     setFilteredReceipts(filtered);
     
@@ -134,9 +131,7 @@ const Reports = () => {
     }, 800);
   };
   
-  // Enhanced export functionality
   const handleExportReport = (format: string) => {
-    // Make sure we have the latest data before exporting
     const currentReceipts = filteredReceipts.length > 0 ? filteredReceipts : filterReceipts();
     
     if (format === 'csv') {
@@ -149,7 +144,6 @@ const Reports = () => {
         description: "Your CSV report has been downloaded.",
       });
     } else if (format === 'pdf') {
-      // Create a printable version of the report
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         toast({
@@ -160,7 +154,6 @@ const Reports = () => {
         return;
       }
       
-      // Generate content for the printable page
       printWindow.document.write(`
         <html>
           <head>
@@ -239,7 +232,6 @@ const Reports = () => {
         description: "Your PDF report has been prepared and is ready to print or save.",
       });
     } else if (format === 'excel') {
-      // Show a message that Excel export is not yet implemented
       toast({
         title: "Excel Export",
         description: "Excel export functionality will be available in a future update.",
@@ -291,7 +283,7 @@ const Reports = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleExportReport("pdf")}>
-                <FilePdf className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 mr-2" />
                 Export as PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExportReport("csv")}>
