@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getReceipts, updateReceipt } from "../utils/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,16 @@ const ApproveReceipts = () => {
   const filteredReceipts = statusFilter === "all" 
     ? receipts 
     : receipts.filter(r => r.status === statusFilter);
+
+  useEffect(() => {
+    const fetchReceipts = () => {
+      const allReceipts = getReceipts();
+      console.log("Fetched receipts for approval:", allReceipts);
+      setReceipts(allReceipts);
+    };
+    
+    fetchReceipts();
+  }, []);
 
   const handleViewReceipt = (receipt: Receipt) => {
     setSelectedReceipt(receipt);

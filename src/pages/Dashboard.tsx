@@ -1,3 +1,5 @@
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Clock, AlertTriangle, FileCheck, FileText } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -8,9 +10,20 @@ const Dashboard = () => {
   const { user } = useAuth();
   const isEmployee = user?.role === "employee";
   const isSupervisor = user?.role === "supervisor";
+  const [receipts, setReceipts] = useState<any[]>([]);
+  
+  // Fetch the latest receipts when component mounts
+  useEffect(() => {
+    const fetchReceipts = () => {
+      const allReceipts = getReceipts();
+      setReceipts(allReceipts);
+    };
+    
+    fetchReceipts();
+  }, []);
 
   // Filter receipts based on the current user
-  const userReceipts = getReceipts().filter(receipt => 
+  const userReceipts = receipts.filter(receipt => 
     isEmployee ? receipt.userId === user?.id : true
   );
   

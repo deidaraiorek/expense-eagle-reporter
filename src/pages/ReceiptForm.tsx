@@ -14,9 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { categories } from "../utils/mockData";
-import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/hooks/use-toast";
+import { categories, addReceipt } from "../utils/mockData";
 import { useAuth } from "../context/AuthContext";
 
 interface ItemForm {
@@ -122,16 +121,54 @@ const ReceiptForm = () => {
       return;
     }
 
-    // In a real app, this would be an API call
-    setTimeout(() => {
+    // Format items for submission
+    const formattedItems = formData.items.map(item => ({
+      name: item.name,
+      price: parseFloat(item.price),
+      quantity: item.quantity
+    }));
+
+    // Add receipt to mock database
+    try {
+      // Make sure we have a valid user ID
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Create receipt object from form data
+      const receiptData = {
+        userId: user.id,
+        date: formData.date,
+        store: formData.store,
+        total: parseFloat(total.toFixed(2)),
+        category: formData.category,
+        subcategory: formData.subcategory,
+        items: formattedItems,
+        notes: formData.notes,
+        image: imagePreview || 'https://placehold.co/600x400'
+      };
+      
+      // Add to mock database
+      const newReceipt = addReceipt(receiptData);
+      console.log('Receipt added successfully:', newReceipt);
+      
       // Success toast
       toast({
         title: "Receipt submitted",
         description: "Your receipt has been successfully submitted for approval.",
       });
+      
       setIsSubmitting(false);
       navigate("/receipts");
-    }, 1000);
+    } catch (error) {
+      console.error('Error adding receipt:', error);
+      toast({
+        variant: "destructive",
+        title: "Submission failed",
+        description: "There was an error submitting your receipt. Please try again."
+      });
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getReceipts } from "../utils/mockData";
@@ -43,13 +42,18 @@ const ReviewReceipts = () => {
   useEffect(() => {
     // Get all receipts from mock data
     const allReceipts = getReceipts();
+    console.log("Fetched receipts:", allReceipts);
     setReceipts(allReceipts);
   }, []);
   
   // Get user's receipts
-  const userReceipts = receipts.filter(receipt => 
-    receipt.userId === user?.id
-  );
+  const userReceipts = receipts.filter(receipt => {
+    console.log(`Comparing receipt userId ${receipt.userId} with user id ${user?.id}`);
+    return receipt.userId === user?.id;
+  });
+  
+  console.log("Current user:", user);
+  console.log("User receipts:", userReceipts);
   
   // Filter by status and search term
   const filteredReceipts = userReceipts.filter(receipt => {
