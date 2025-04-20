@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { getReceipts, updateReceipt } from "../utils/mockData";
+import { getReceipts, updateReceipt, approveReceipt, rejectReceipt, flagReceipt } from "../utils/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +33,7 @@ import { Receipt } from "../types";
 
 const ApproveReceipts = () => {
   const { toast } = useToast();
-  const [receipts, setReceipts] = useState<Receipt[]>(getReceipts());
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -67,14 +68,22 @@ const ApproveReceipts = () => {
   const handleApprove = () => {
     if (!selectedReceipt) return;
     
-    // Update receipt status (this would be an API call in a real app)
-    const updatedReceipts = receipts.map(receipt => 
-      receipt.id === selectedReceipt.id 
-        ? { ...receipt, status: "approved" as const } 
-        : receipt
-    );
+    // Use the approveReceipt function from mockData
+    const updatedReceipt = approveReceipt(selectedReceipt.id, feedback);
+    console.log("Approved receipt:", updatedReceipt);
     
-    setReceipts(updatedReceipts);
+    // Update the local receipts state with the updated receipt
+    if (updatedReceipt) {
+      setReceipts(prevReceipts => 
+        prevReceipts.map(receipt => 
+          receipt.id === selectedReceipt.id ? updatedReceipt : receipt
+        )
+      );
+      
+      // Update the selected receipt if dialog stays open
+      setSelectedReceipt(updatedReceipt);
+    }
+    
     setShowReceiptDialog(false);
     
     toast({
@@ -93,14 +102,19 @@ const ApproveReceipts = () => {
       return;
     }
     
-    // Update receipt status (this would be an API call in a real app)
-    const updatedReceipts = receipts.map(receipt => 
-      receipt.id === selectedReceipt.id 
-        ? { ...receipt, status: "rejected" as const, notes: feedback } 
-        : receipt
-    );
+    // Use the rejectReceipt function from mockData
+    const updatedReceipt = rejectReceipt(selectedReceipt.id, feedback);
+    console.log("Rejected receipt:", updatedReceipt);
     
-    setReceipts(updatedReceipts);
+    // Update the local receipts state with the updated receipt
+    if (updatedReceipt) {
+      setReceipts(prevReceipts => 
+        prevReceipts.map(receipt => 
+          receipt.id === selectedReceipt.id ? updatedReceipt : receipt
+        )
+      );
+    }
+    
     setShowReceiptDialog(false);
     
     toast({
@@ -112,24 +126,26 @@ const ApproveReceipts = () => {
   const handleFlag = () => {
     if (!selectedReceipt) return;
     
-    // Toggle flag status
-    const updatedReceipts = receipts.map(receipt => 
-      receipt.id === selectedReceipt.id 
-        ? { ...receipt, flagged: !receipt.flagged } 
-        : receipt
-    );
+    // Toggle flag status using the flagReceipt function
+    const updatedReceipt = flagReceipt(selectedReceipt.id, !selectedReceipt.flagged);
+    console.log("Flagged receipt:", updatedReceipt);
     
-    setReceipts(updatedReceipts);
-    setSelectedReceipt(prev => prev ? { ...prev, flagged: !prev.flagged } : null);
+    // Update the local receipts state with the updated receipt
+    if (updatedReceipt) {
+      setReceipts(prevReceipts => 
+        prevReceipts.map(receipt => 
+          receipt.id === selectedReceipt.id ? updatedReceipt : receipt
+        )
+      );
+      
+      // Update the selected receipt if dialog stays open
+      setSelectedReceipt(updatedReceipt);
+    }
     
     toast({
-      title: updatedReceipts.find(r => r.id === selectedReceipt.id)?.flagged 
-        ? "Receipt Flagged" 
-        : "Flag Removed",
+      title: updatedReceipt?.flagged ? "Receipt Flagged" : "Flag Removed",
       description: `Receipt from ${selectedReceipt.store} has been ${
-        updatedReceipts.find(r => r.id === selectedReceipt.id)?.flagged 
-          ? "flagged for further review" 
-          : "unflagged"
+        updatedReceipt?.flagged ? "flagged for further review" : "unflagged"
       }.`,
     });
   };

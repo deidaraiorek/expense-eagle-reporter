@@ -131,10 +131,21 @@ export const addReceipt = (receipt: Omit<Receipt, 'id' | 'status'>) => {
 };
 
 export const updateReceipt = (id: string, updates: Partial<Receipt>) => {
+  const oldReceipt = receiptStore.find(r => r.id === id);
+  if (!oldReceipt) return null;
+  
+  // Create updated receipt
+  const updatedReceipt = { ...oldReceipt, ...updates };
+  
+  // Update in store
   receiptStore = receiptStore.map(receipt =>
-    receipt.id === id ? { ...receipt, ...updates } : receipt
+    receipt.id === id ? updatedReceipt : receipt
   );
-  return receiptStore.find(r => r.id === id);
+  
+  console.log(`Receipt ${id} updated:`, updatedReceipt);
+  console.log("Current receipt store:", receiptStore);
+  
+  return updatedReceipt;
 };
 
 export const deleteReceipt = (id: string) => {
@@ -146,14 +157,17 @@ export const getReceiptById = (id: string) => {
 };
 
 export const approveReceipt = (id: string, notes?: string) => {
+  console.log(`Approving receipt ${id} with notes:`, notes);
   return updateReceipt(id, { status: 'approved', notes });
 };
 
 export const rejectReceipt = (id: string, notes: string) => {
+  console.log(`Rejecting receipt ${id} with notes:`, notes);
   return updateReceipt(id, { status: 'rejected', notes });
 };
 
 export const flagReceipt = (id: string, flagged: boolean) => {
+  console.log(`Setting flag for receipt ${id} to ${flagged}`);
   return updateReceipt(id, { flagged });
 };
 
