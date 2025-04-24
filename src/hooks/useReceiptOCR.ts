@@ -17,16 +17,21 @@ export const useReceiptOCR = () => {
     setProgress(0);
 
     try {
-      const worker = await createWorker('eng');
+      // Create worker with proper API usage
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setProgress(m.progress * 100);
+          }
+        }
+      });
       
-      await worker.load();
+      // Initialize worker and load language
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
       
-      const result = await worker.recognize(imageFile, {}, (p) => {
-        setProgress(p.progress * 100);
-      });
-
+      // Recognize text from the image
+      const result = await worker.recognize(imageFile);
       await worker.terminate();
       
       const text = result.data.text;
