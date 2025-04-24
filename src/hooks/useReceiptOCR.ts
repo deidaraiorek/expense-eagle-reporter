@@ -17,21 +17,21 @@ export const useReceiptOCR = () => {
     setProgress(0);
 
     try {
-      // Create worker without logger to fix TS errors
-      const worker = await createWorker();
+      console.log('Creating OCR worker...');
       
-      console.log('OCR worker created, loading language...');
-      
-      // Set progress handler separately
-      worker.setProgressHandler((p) => {
-        console.log('OCR progress:', p);
-        if (p.status === 'recognizing text') {
-          setProgress(p.progress * 100);
+      // In Tesseract.js v5, we need to use the progress option during creation
+      const worker = await createWorker({
+        logger: m => {
+          console.log('OCR progress:', m);
+          if (m.status === 'recognizing text') {
+            setProgress(m.progress * 100);
+          }
         }
       });
       
-      // Load language pack and initialize
-      await worker.load();
+      console.log('OCR worker created, loading language...');
+      
+      // Initialize worker with language
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
       
