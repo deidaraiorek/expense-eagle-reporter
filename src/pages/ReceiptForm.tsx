@@ -1,7 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Receipt, Upload, Plus, Minus, Info } from "lucide-react";
+import { Receipt, Upload, Plus, Minus, Info, ScanText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { categories, addReceipt } from "../utils/mockData";
 import { useAuth } from "../context/AuthContext";
+import { useReceiptOCR } from "../hooks/useReceiptOCR";
+import { Progress } from "@/components/ui/progress";
 
 interface ItemForm {
   name: string;
@@ -30,7 +31,8 @@ const ReceiptForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
+  const { scanReceipt, isScanning, progress } = useReceiptOCR();
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     store: "",
@@ -40,10 +42,8 @@ const ReceiptForm = () => {
     notes: "",
   });
 
-  // Compute available subcategories based on selected category
   const availableSubcategories = formData.category ? categories[formData.category] || [] : [];
 
-  // Calculate total
   const total = formData.items.reduce((sum, item) => {
     return sum + (parseFloat(item.price) || 0) * (item.quantity || 0);
   }, 0);
@@ -55,7 +55,6 @@ const ReceiptForm = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => {
-      // If category changes, reset subcategory
       if (name === "category") {
         return { ...prev, [name]: value, subcategory: "" };
       }
@@ -82,23 +81,40 @@ const ReceiptForm = () => {
     setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create preview URL
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
+
+    try {
+      const extractedData = await scanReceipt(file);
+      
+      setFormData(prev => ({
+        ...prev,
+        store: extractedData.store || prev.store,
+        date: extractedData.date || prev.date,
+        items: [
+          {
+            name: "Item Total",
+            price: extractedData.total || "",
+            quantity: 1
+          }
+        ]
+      }));
+    } catch (error) {
+      console.error('Failed to scan receipt:', error);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validate form
     if (!formData.store || !formData.category || !formData.subcategory || !imagePreview) {
       toast({
         variant: "destructive",
@@ -109,7 +125,6 @@ const ReceiptForm = () => {
       return;
     }
 
-    // Check if all items have name and price
     const invalidItems = formData.items.some(item => !item.name || !item.price);
     if (invalidItems) {
       toast({
@@ -121,21 +136,17 @@ const ReceiptForm = () => {
       return;
     }
 
-    // Format items for submission
     const formattedItems = formData.items.map(item => ({
       name: item.name,
       price: parseFloat(item.price),
       quantity: item.quantity
     }));
 
-    // Add receipt to mock database
     try {
-      // Make sure we have a valid user ID
       if (!user?.id) {
         throw new Error("User not authenticated");
       }
       
-      // Create receipt object from form data
       const receiptData = {
         userId: user.id,
         date: formData.date,
@@ -148,11 +159,9 @@ const ReceiptForm = () => {
         image: imagePreview || 'https://placehold.co/600x400'
       };
       
-      // Add to mock database
       const newReceipt = addReceipt(receiptData);
       console.log('Receipt added successfully:', newReceipt);
       
-      // Success toast
       toast({
         title: "Receipt submitted",
         description: "Your receipt has been successfully submitted for approval.",
@@ -179,7 +188,6 @@ const ReceiptForm = () => {
       
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left column - Receipt Details */}
           <div className="space-y-6">
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Receipt Details</h2>
@@ -340,7 +348,6 @@ const ReceiptForm = () => {
             </Card>
           </div>
           
-          {/* Right column - Image Upload and Submit */}
           <div className="space-y-6">
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Receipt Image</h2>
@@ -354,14 +361,25 @@ const ReceiptForm = () => {
                         alt="Receipt preview" 
                         className="max-h-60 mx-auto object-contain"
                       />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => document.getElementById('receipt-image')?.click()}
-                      >
-                        Change Image
-                      </Button>
+                      <div className="space-y-2">
+                        {isScanning && (
+                          <>
+                            <div className="text-sm text-center text-gray-500">
+                              Scanning receipt...
+                            </div>
+                            <Progress value={progress} className="w-full" />
+                          </>
+                        )}
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full flex items-center justify-center gap-2"
+                          onClick={() => document.getElementById('receipt-image')?.click()}
+                        >
+                          <ScanText className="h-4 w-4" />
+                          Change Image
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <>
@@ -375,8 +393,8 @@ const ReceiptForm = () => {
                         className="flex items-center gap-2"
                         onClick={() => document.getElementById('receipt-image')?.click()}
                       >
-                        <Upload className="h-4 w-4" /> 
-                        Select Image
+                        <ScanText className="h-4 w-4" /> 
+                        Select & Scan Image
                       </Button>
                     </>
                   )}
@@ -392,8 +410,8 @@ const ReceiptForm = () => {
                 <div className="flex items-start gap-2 text-sm text-gray-500">
                   <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <p>
-                    Please ensure the receipt image is clear and all details are visible.
-                    For this demo, any image can be uploaded.
+                    Upload a clear image of your receipt. The system will attempt to
+                    automatically extract information like store name, date, and total.
                   </p>
                 </div>
               </div>
