@@ -19,20 +19,17 @@ export const useReceiptOCR = () => {
     try {
       console.log('Creating OCR worker with English language...');
       
-      // Correct syntax for Tesseract.js v5+
-      // The logger function now needs to be passed as part of the worker options
-      const worker = await createWorker({
-        logger: m => {
-          console.log('OCR progress:', m);
-          if (m.status === 'recognizing text') {
-            setProgress(m.progress * 100);
-          }
+      // According to v5+ API, the language is the first parameter
+      // and the logger is passed as a callback in the worker creation
+      const worker = await createWorker('eng');
+      
+      // Set up progress logging
+      worker.setProgressHandler((m) => {
+        console.log('OCR progress:', m);
+        if (m.status === 'recognizing text') {
+          setProgress(m.progress * 100);
         }
       });
-
-      // Load language separately after worker creation
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
       
       console.log('OCR worker created, recognizing text...');
       
