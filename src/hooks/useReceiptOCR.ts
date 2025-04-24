@@ -17,24 +17,33 @@ export const useReceiptOCR = () => {
     setProgress(0);
 
     try {
-      // Create worker with proper API usage
-      const worker = await createWorker({
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            setProgress(m.progress * 100);
-          }
+      // Create worker without logger to fix TS errors
+      const worker = await createWorker();
+      
+      console.log('OCR worker created, loading language...');
+      
+      // Set progress handler separately
+      worker.setProgressHandler((p) => {
+        console.log('OCR progress:', p);
+        if (p.status === 'recognizing text') {
+          setProgress(p.progress * 100);
         }
       });
       
-      // Initialize worker and load language
+      // Load language pack and initialize
+      await worker.load();
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
       
+      console.log('Processing image with OCR...');
+      
       // Recognize text from the image
-      const result = await worker.recognize(imageFile);
+      const { data } = await worker.recognize(imageFile);
+      console.log('OCR completed');
+      
       await worker.terminate();
       
-      const text = result.data.text;
+      const text = data.text;
       console.log('Extracted text:', text);
 
       // Try to extract data from the OCR result
