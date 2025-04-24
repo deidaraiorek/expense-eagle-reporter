@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, Clock, AlertTriangle, FileCheck, FileText } from "lucide-react";
+import { Receipt, Clock, AlertTriangle, FileCheck, FileText, MessageSquare } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getReceipts } from "../utils/mockData";
 import { Link } from "react-router-dom";
@@ -111,6 +111,10 @@ const Dashboard = () => {
                 <>
                   <Link to="/approve-receipts" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full bg-indigo-600">
                     Approve Receipts
+                  </Link>
+                  <Link to="/expense-chat" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Expense Chatbot
                   </Link>
                   <Link to="/reports" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
                     Generate Reports

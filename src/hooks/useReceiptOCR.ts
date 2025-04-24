@@ -1,80 +1,71 @@
 
 import { useState } from 'react';
-import { createWorker } from 'tesseract.js';
+import * as Tesseract from 'tesseract.js';
 
-interface ExtractedData {
-  store?: string;
-  total?: string;
-  date?: string;
+interface OCRResult {
+  text: string;
+  confidence: number;
 }
 
 export const useReceiptOCR = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<OCRResult | null>(null);
 
-  const scanReceipt = async (imageFile: File): Promise<ExtractedData> => {
-    setIsScanning(true);
-    setProgress(0);
-
+  const scanReceiptImage = async (imageUrl: string) => {
     try {
-      console.log('Creating OCR worker with English language...');
-      
-      // According to v5+ API, the language is the first parameter
-      // and the logger is passed as a callback in the worker creation
-      const worker = await createWorker('eng');
-      
-      // Set up progress logging
-      worker.setProgressHandler((m) => {
-        console.log('OCR progress:', m);
-        if (m.status === 'recognizing text') {
-          setProgress(m.progress * 100);
-        }
+      setIsScanning(true);
+      setProgress(0);
+      setError(null);
+      setResult(null);
+
+      console.log("Starting OCR scan on image:", imageUrl);
+
+      // Configure and create the worker
+      const worker = await Tesseract.createWorker('eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setProgress(m.progress * 100);
+          }
+          console.log(m);
+        },
       });
+
+      console.log("Worker created successfully");
+
+      // Perform the OCR recognition
+      const { data } = await worker.recognize(imageUrl);
       
-      console.log('OCR worker created, recognizing text...');
-      
-      // Recognize text from the image
-      const { data } = await worker.recognize(imageFile);
-      console.log('OCR completed');
-      
+      console.log("OCR complete, result:", data);
+
+      // Process the result
+      if (data) {
+        setResult({
+          text: data.text,
+          confidence: data.confidence,
+        });
+      } else {
+        throw new Error("No OCR result data returned");
+      }
+
+      // Terminate the worker
       await worker.terminate();
-      
-      const text = data.text;
-      console.log('Extracted text:', text);
+      console.log("Worker terminated");
 
-      // Try to extract data from the OCR result
-      const extractedData: ExtractedData = {};
-      
-      // Try to find total amount (looking for patterns like $123.45 or 123.45)
-      const totalMatch = text.match(/\$?\s*(\d+\.\d{2})/);
-      if (totalMatch) {
-        extractedData.total = totalMatch[1];
-      }
-
-      // Try to find date (simple date formats)
-      const dateMatch = text.match(/\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/);
-      if (dateMatch) {
-        extractedData.date = dateMatch[0];
-      }
-
-      // Try to find store name (usually at the top of receipt)
-      const lines = text.split('\n');
-      if (lines.length > 0) {
-        extractedData.store = lines[0].trim();
-      }
-
-      return extractedData;
-    } catch (error) {
-      console.error('OCR Error:', error);
-      throw error;
+    } catch (err) {
+      console.error("OCR Error:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {
       setIsScanning(false);
     }
   };
 
   return {
-    scanReceipt,
+    scanReceiptImage,
     isScanning,
-    progress
+    progress,
+    error,
+    result,
   };
 };

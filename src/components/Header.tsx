@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserCircle } from "lucide-react";
+import { UserCircle, MessageSquare } from "lucide-react";
 
 const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -18,6 +18,7 @@ const Header = () => {
     { to: "/reports", label: "Reports" },
     { to: "/department-members", label: "Department Members" },
     { to: "/user-management", label: "User Management" },
+    { to: "/expense-chat", label: "Expense Chat" },
   ];
 
   const employeeLinks = [

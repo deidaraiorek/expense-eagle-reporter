@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -45,6 +46,12 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/expense-chat" element={
+        <ProtectedRoute>
+          <ExpenseChatbot />
         </ProtectedRoute>
       } />
       
