@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../types";
-import { users as mockUsers } from "../utils/mockData";
+import { users as mockUsers, mockRegister } from "../utils/mockData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -8,7 +8,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { UserPlus } from "lucide-react";
 
 interface EditUserFormData {
   firstName: string;
@@ -27,29 +29,71 @@ interface EditUserFormData {
   email: string;
   role: "employee" | "supervisor";
   department: string;
+  password?: string;
 }
 
 const UserManagement = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editFormData, setEditFormData] = useState<EditUserFormData>({
+  const [formData, setFormData] = useState<EditUserFormData>({
     firstName: "",
     lastName: "",
     email: "",
     role: "employee",
     department: "",
+    password: ""
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setEditFormData(prev => ({ ...prev, role: value === "employee" ? "employee" : "supervisor" }));
+  const handleCreateAccount = () => {
+    try {
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+        toast({
+          variant: "destructive",
+          title: "Missing Information",
+          description: "Please fill in all required fields."
+        });
+        return;
+      }
+
+      const result = mockRegister({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        role: "employee",
+        department: formData.department
+      });
+
+      setUsers(prev => [...prev, result.user]);
+      setShowCreateDialog(false);
+      
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        role: "employee",
+        department: "",
+        password: ""
+      });
+
+      toast({
+        title: "Account Created",
+        description: `Account for ${formData.firstName} ${formData.lastName} has been created successfully.`
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create account. Please try again."
+      });
+    }
   };
 
   const handleEditUser = (user: User) => {
@@ -80,7 +124,16 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          className="flex items-center gap-2"
+        >
+          <UserPlus className="h-4 w-4" />
+          Create Employee Account
+        </Button>
+      </div>
       
       <Card>
         <CardContent className="p-0">
@@ -112,6 +165,101 @@ const UserManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Employee Account</DialogTitle>
+            <DialogDescription>
+              Enter details to create a new employee account.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 items-center gap-4">
+              <div>
+                <label htmlFor="firstName" className="text-right text-sm">
+                  First Name *
+                </label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="lastName" className="text-right text-sm">
+                  Last Name *
+                </label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="mt-1"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="text-sm">
+                Email *
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="text-sm">
+                Password *
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="department" className="text-sm">
+                Department
+              </label>
+              <Input
+                id="department"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleCreateAccount}>
+              Create Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-md">
