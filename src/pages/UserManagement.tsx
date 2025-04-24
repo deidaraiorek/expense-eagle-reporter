@@ -46,10 +46,22 @@ const UserManagement = () => {
     department: "",
     password: ""
   });
+  const [editFormData, setEditFormData] = useState<EditUserFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "employee",
+    department: ""
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCreateAccount = () => {
@@ -63,6 +75,17 @@ const UserManagement = () => {
         return;
       }
 
+      // Check if a user with this email already exists
+      const emailExists = users.some(user => user.email === formData.email);
+      if (emailExists) {
+        toast({
+          variant: "destructive",
+          title: "Email Already Exists",
+          description: "An account with this email already exists."
+        });
+        return;
+      }
+
       const result = mockRegister({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -71,7 +94,7 @@ const UserManagement = () => {
         department: formData.department
       });
 
-      setUsers(prev => [...prev, result.user]);
+      // Use the ID from the result to avoid duplicate key issues
       setShowCreateDialog(false);
       
       setFormData({
@@ -269,54 +292,54 @@ const UserManagement = () => {
           
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="firstName" className="text-right">
+              <label htmlFor="editFirstName" className="text-right">
                 First Name
               </label>
               <Input
-                id="firstName"
+                id="editFirstName"
                 name="firstName"
                 value={editFormData.firstName}
-                onChange={handleChange}
+                onChange={handleEditChange}
                 className="col-span-3"
               />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="lastName" className="text-right">
+              <label htmlFor="editLastName" className="text-right">
                 Last Name
               </label>
               <Input
-                id="lastName"
+                id="editLastName"
                 name="lastName"
                 value={editFormData.lastName}
-                onChange={handleChange}
+                onChange={handleEditChange}
                 className="col-span-3"
               />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="email" className="text-right">
+              <label htmlFor="editEmail" className="text-right">
                 Email
               </label>
               <Input
-                id="email"
+                id="editEmail"
                 name="email"
                 type="email"
                 value={editFormData.email}
-                onChange={handleChange}
+                onChange={handleEditChange}
                 className="col-span-3"
               />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="role" className="text-right">
+              <label htmlFor="editRole" className="text-right">
                 Role
               </label>
               <select
-                id="role"
+                id="editRole"
                 name="role"
                 value={editFormData.role}
-                onChange={handleRoleChange}
+                onChange={handleEditChange}
                 className="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               >
                 <option value="employee">Employee</option>
@@ -325,14 +348,14 @@ const UserManagement = () => {
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="department" className="text-right">
+              <label htmlFor="editDepartment" className="text-right">
                 Department
               </label>
               <Input
-                id="department"
+                id="editDepartment"
                 name="department"
                 value={editFormData.department}
-                onChange={handleChange}
+                onChange={handleEditChange}
                 className="col-span-3"
               />
             </div>
