@@ -31,9 +31,18 @@ const Header = () => {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-2xl font-bold text-indigo-600">
-              EERIS
-            </Link>
+            
+          {
+              (isAuthenticated 
+                &&
+              <Link to="/dashboard" className="text-2xl font-bold text-indigo-600">
+                EERIS
+              </Link>)
+            ||
+              (<Link to="/" className="text-2xl font-bold text-indigo-600">
+                EERIS
+              </Link>)
+            }
             {isAuthenticated && (
               <div className="hidden md:flex space-x-4">
                 <Link
