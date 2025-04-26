@@ -31,7 +31,7 @@ const ReceiptForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { scanReceipt, isScanning, progress } = useReceiptOCR();
+  const { scanReceiptImage, isScanning, progress } = useReceiptOCR();
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -92,19 +92,13 @@ const ReceiptForm = () => {
     reader.readAsDataURL(file);
 
     try {
-      const extractedData = await scanReceipt(file);
-      
+      const extractedData = await scanReceiptImage(file);
+      console.log("Extracted Data:", extractedData);
       setFormData(prev => ({
         ...prev,
-        store: extractedData.store || prev.store,
-        date: extractedData.date || prev.date,
-        items: [
-          {
-            name: "Item Total",
-            price: extractedData.total || "",
-            quantity: 1
-          }
-        ]
+        store: extractedData?.store || prev.store,
+        date: extractedData?.date || prev.date,
+        items: extractedData?.items.map(item => item.name ? { name: item.name, price: item.price, quantity: Number(item.quantity) } : null) || prev.items,
       }));
     } catch (error) {
       console.error('Failed to scan receipt:', error);
